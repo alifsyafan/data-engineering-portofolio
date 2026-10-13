@@ -44,6 +44,3 @@ Dataset terdiri dari 6 tabel yang saling berelasi:
 ## Cara Menjalankan
 1. Setup database PostgreSQL dengan dataset e-commerce (6 tabel).
 2. Jalankan setiap file `.sql` di folder `queries/` menggunakan pgAdmin Query Tool atau `psql`.
-
-## Author
-Muhammad Alif Syafan
