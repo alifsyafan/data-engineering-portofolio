@@ -1,0 +1,21 @@
+order_id,order_date,customer_id,product,category,quantity,unit_price
+1001,2026-10-01,C001,Wireless Mouse,Accessories,2,150000
+1002,2026-10-01,C002,Mechanical Keyboard,Accessories,1,450000
+1003,2026-10-02,C003,USB-C Hub,Accessories,1,275000
+1004,2026-10-02,C001,Laptop Stand,Accessories,2,200000
+1005,2026-10-03,C004,Monitor,Electronics,1,1850000
+1006,2026-10-03,C005,Webcam,Electronics,1,650000
+1007,2026-10-04,C006,Desk Lamp,Home,3,125000
+1008,2026-10-04,C007,Office Chair,Furniture,1,1250000
+1009,2026-10-05,C008,Headphones,Electronics,2,350000
+1010,2026-10-05,C009,Mouse Pad,Accessories,2,50000
+1011,2026-10-06,C010,USB-C Hub,Accessories,1,275000
+1012,2026-10-06,C011,Desk Lamp,Home,2,125000
+1013,2026-10-07,C012,Monitor,Electronics,1,1850000
+1014,2026-10-07,C013,Office Chair,Furniture,1,1250000
+1015,2026-10-08,C014,Webcam,Electronics,2,650000
+1016,2026-10-08,C015,Mechanical Keyboard,Accessories,1,450000
+1017,2026-10-09,C016,Headphones,Electronics,1,350000
+1018,2026-10-09,C017,Laptop Stand,Accessories,1,200000
+1019,2026-10-10,C018,Wireless Mouse,Accessories,1,150000
+1020,2026-10-10,C019,Desk Lamp,Home,2,125000
