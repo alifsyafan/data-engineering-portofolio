@@ -5,7 +5,7 @@ Kumpulan portfolio data engineering yang saya bangun selama proses belajar.
 | # | Portfolio | Tools | Status |
 |---|---|---|---|
 | 1 | [E-Commerce SQL Analysis](01-sql-ecommerce-analysis/) | SQL, PostgreSQL | Selesai |
-| 2 | Python Data Processing | Python, Pandas, PostgreSQL | Proses |
+| 2 | Python Data Processing | Python, Pandas, PostgreSQL | Selesai |
 | 3 | End-to-End Data Pipeline | PySpark, Databricks, GCP | Proses |
 
 ## Tentang Saya
