@@ -37,7 +37,7 @@ PostgreSQL
 
 ## Teknologi yang Digunakan
 
-- **Python 3.10** - bahasa pemrograman untuk implementasi ETL.
+- **Python 3.15** - bahasa pemrograman untuk implementasi ETL.
 - **Pandas** - membaca, mentransformasi, dan memvalidasi data tabular.
 - **PostgreSQL** - database relasional sebagai target penyimpanan.
 - **SQLAlchemy** - koneksi dan interaksi dengan PostgreSQL.
@@ -58,6 +58,7 @@ PostgreSQL
 ├── .env.example
 ├── .gitignore
 ├── load_to_db.py
+├── pyproject.toml
 ├── requirements.txt
 └── README.md
 ```
@@ -113,7 +114,7 @@ Strategi ini sesuai untuk demonstrasi batch ETL berukuran kecil. Untuk kebutuhan
 
 Sebelum menjalankan proyek, siapkan:
 
-- Python 3.10
+- Python 3.10+ (direkomendasikan Python 3.12+ atau 3.15)
 - PostgreSQL
 - Git
 
@@ -124,8 +125,8 @@ Seluruh perintah berikut dijalankan dari direktori `02-python-data-processing` m
 ### 1. Membuat dan mengaktifkan virtual environment
 
 ```powershell
-py -3.10 -m venv .venv
-.\.venv\Scripts\Activate.ps1
+python -m venv venv
+.\venv\Scripts\Activate.ps1
 ```
 
 ### 2. Menginstal dependencies
