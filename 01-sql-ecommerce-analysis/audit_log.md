@@ -110,9 +110,9 @@ Selisih ini yang membuka DQ-1. Angka acuan harus berasal dari populasi yang sama
 dengan query yang divalidasi.
 
 
-## 4. Validasi pipeline Python (Hari 3)
+## 4. Validasi pipeline Python
 
-- Koneksi PostgreSQL ke pandas memakai SQLAlchemy dengan kredensial dari `.env` (tidak di-commit).
+- Koneksi PostgreSQL ke pandas memakai SQLAlchemy dengan kredensial dari `.env`.
 - Enam tabel termuat dengan jumlah baris sesuai `COUNT(*)` di PostgreSQL.
 - Reproduksi di pandas (`merge` inner): 30.455 order valid; 25.266 order valid yang punya item; 15.012.982,48 USD. Semuanya sama dengan hasil SQL.
 
