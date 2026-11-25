@@ -4,6 +4,8 @@
 
 -- Tabel: customers, orders, order_items
 -- Filter: Hanya order dengan status COMPLETE atau CLOSED
+-- Definisi: total_orders = jumlah order valid yang memiliki minimal 1 item
+--           (order valid tanpa item tidak ikut karena JOIN ke order_items).
 
 SELECT
     c.customer_id,
