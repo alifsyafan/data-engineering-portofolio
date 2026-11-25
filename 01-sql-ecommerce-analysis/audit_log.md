@@ -119,15 +119,15 @@ dengan query yang divalidasi.
 
 ## 5. Keterbatasan dan tindak lanjut
 
-- [ ] Pisahkan 25 kategori tanpa penjualan valid: tanpa produk sama sekali vs berproduk tetapi tidak laku.
-- [ ] Periksa pemetaan produk ke kategori untuk 9 produk teratas (nama produk tampak tidak selalu sesuai namanya kategori).
-- [ ] Periksa apakah nama produk terpotong 45 karakter di sumber data.
-- [ ] Hitung revenue per status untuk melihat potensi revenue yang tertahan.
-- [ ] Analisis retensi kohort sungguhan (Q09 baru segmentasi frekuensi).
+- Pisahkan 25 kategori tanpa penjualan valid: tanpa produk sama sekali vs berproduk tetapi tidak laku.
+- Periksa pemetaan produk ke kategori untuk 9 produk teratas (nama produk tampak tidak selalu sesuai namanya kategori).
+- Periksa apakah nama produk terpotong 45 karakter di sumber data.
+- Hitung revenue per status untuk melihat potensi revenue yang tertahan.
+- Analisis retensi kohort sungguhan (Q09 baru segmentasi frekuensi).
 - Data hanya mencakup satu tahun dan satu potret status order, sehingga pola musiman dan perubahan status tidak dapat disimpulkan.
 
 
 ## 6. Format entri baru
 
 Setiap temuan baru dicatat dengan: **ID, temuan, bukti (query atau angka), dampak, tindakan, status**
-(Terverifikasi / Dugaan / Terbuka). Tuliskan penyebab hanya jika sudah terbukti.
+(Terverifikasi / Dugaan / Terbuka).
