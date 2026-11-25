@@ -5,8 +5,12 @@
 -- Tabel: orders
 
 SELECT
-    order_status,
-    COUNT(*) AS total_order
-FROM orders
-GROUP BY order_status
+    o.order_status,
+    COUNT(o.order_id) AS total_order,
+    ROUND(
+        100.0 * COUNT(o.order_id) / SUM(COUNT(o.order_id)) OVER (),
+        2
+    ) AS pct_of_orders
+FROM orders AS o
+GROUP BY o.order_status
 ORDER BY total_order DESC;

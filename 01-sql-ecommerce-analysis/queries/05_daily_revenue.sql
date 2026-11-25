@@ -8,11 +8,11 @@
 
 
 SELECT
-    o.order_date,
-    SUM(oi.order_item_subtotal) AS daily_revenue
+    o.order_date::date AS order_day,
+    ROUND(SUM(oi.order_item_subtotal)::numeric, 2) AS daily_revenue_usd
 FROM orders AS o
     JOIN order_items AS oi
         ON o.order_id = oi.order_item_order_id
 WHERE o.order_status IN ('COMPLETE', 'CLOSED')
-GROUP BY o.order_date
-ORDER BY o.order_date;
+GROUP BY o.order_date::date
+ORDER BY order_day;

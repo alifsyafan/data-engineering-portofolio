@@ -3,13 +3,13 @@
 
 -- Pertanyaan Bisnis: Kategori produk mana yang menghasilkan revenue terbesar?
 --
--- Tabel yang digunakan: categories, products, order_items, orders
+-- Tabel: categories, products, order_items, orders
 --
 -- Filter: Hanya order dengan status COMPLETE atau CLOSED
 
-SELECT
+SELECT c.category_id,
     c.category_name,
-    SUM(oi.order_item_subtotal) AS revenue
+    ROUND(SUM(oi.order_item_subtotal)::numeric ,2) AS total_revenue_usd
 FROM categories AS c
     JOIN products AS p
         ON c.category_id = p.product_category_id
@@ -18,5 +18,5 @@ FROM categories AS c
     JOIN orders AS o
         ON oi.order_item_order_id = o.order_id
 WHERE o.order_status IN ('COMPLETE', 'CLOSED')
-GROUP BY c.category_name
-ORDER BY revenue DESC;
+GROUP BY c.category_id, c.category_name
+ORDER BY total_revenue_usd DESC;

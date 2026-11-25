@@ -8,7 +8,8 @@
 
 SELECT
     to_char(o.order_date, 'YYYY-MM') AS month,
-    SUM(oi.order_item_subtotal) AS monthly_revenue
+    COUNT(DISTINCT o.order_date::date) AS active_days,
+    ROUND(SUM(oi.order_item_subtotal)::numeric, 2) AS monthly_revenue_usd
 FROM orders AS o
     JOIN order_items AS oi
         ON o.order_id = oi.order_item_order_id
