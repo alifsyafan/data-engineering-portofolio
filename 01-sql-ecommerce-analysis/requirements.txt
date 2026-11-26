@@ -3,3 +3,6 @@ SQLAlchemy
 psycopg2-binary
 python-dotenv
 ipykernel
+seaborn
+matplotlib
+scipy

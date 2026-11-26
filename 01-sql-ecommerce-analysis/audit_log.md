@@ -47,6 +47,7 @@ Distribusi status: COMPLETE 22.899; PENDING_PAYMENT 15.030; PROCESSING 8.275; PE
 - **Perbaikan:** `COUNT(...) * 100.0 / SUM(COUNT(...)) OVER ()` (dinamis, tanpa angka 68883 yang ditulis manual).
 - **Bukti:** total 68.883; jumlah persentase 99,99 (selisih pembulatan).
 - **Temuan:** 44,2% order valid; 51,5% masih berjalan; 4,3% batal atau diduga fraud.
+- **Tindak lanjut:** nilai order per status dan pengujian dua hipotesis tentang status dicatat di Bagian 5.
 
 ### Query 05 — Revenue harian
 - **Masalah:** alias belum berlabel USD; risiko pengelompokan per timestamp.
@@ -60,21 +61,21 @@ Distribusi status: COMPLETE 22.899; PENDING_PAYMENT 15.030; PROCESSING 8.275; PE
 - **Temuan:** 2013-07 hanya 7 hari dan 2014-07 hanya 24 hari (parsial). Sebelas bulan lainnya penuh.
 
 ### Query 07 — Kontribusi kategori dan Pareto
-- **Masalah (versi tugas):** `GROUP BY` per nama; kumulatif memakai frame bawaan (`RANGE`) tanpa pemisah seri.
+- **Masalah:** `GROUP BY` per nama; kumulatif memakai frame bawaan (`RANGE`) tanpa pemisah seri.
 - **Perbaikan:** `GROUP BY category_id, category_name`; `ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW` dengan urutan deterministik; ditambah `revenue_rank` dan `pareto_group`.
 - **Bukti:** 33 baris; kumulatif akhir 100,00; total revenue 15.012.982,48.
 - **Temuan:** 7 dari 33 kategori (21,2%) menyumbang 82,64%.
 - **Catatan:** `total_orders` per kategori tidak boleh dijumlahkan (total 66.103 vs 25.266 order, karena satu order bisa memuat beberapa kategori).
 
 ### Query 08 — Tren bulanan, AOV, MoM
-- **Masalah (versi tugas):** MoM dihitung juga untuk bulan parsial.
+- **Masalah:** MoM dihitung juga untuk bulan parsial.
 - **Dampak:** tanpa koreksi, Agustus 2013 tampak +266% dan Juli 2014 tampak −19%. Keduanya hanya efek jumlah hari.
 - **Perbaikan:** bulan parsial dideteksi dari rentang tanggal data (bukan dari `active_days`, karena Maret 2014 tetap penuh walau 9 Maret kosong); MoM hanya dihitung jika bulan ini dan bulan lalu sama-sama penuh, selain itu `NULL`; ditambah `avg_daily_revenue_usd`.
 - **Bukti:** `month_status` = PARTIAL hanya di 2013-07 dan 2014-07; jumlah `total_orders` = 25.266.
 - **Temuan:** 10 nilai MoM dapat dihitung (−10,03% sampai +17,77%); AOV stabil (581,94 sampai 603,76 USD).
 
 ### Query 09 — Segmentasi retensi pelanggan
-- **Masalah (versi tugas):** kolom jumlah order dan rata-rata revenue per pelanggan belum ada; definisi tidak tertulis.
+- **Masalah:** kolom jumlah order dan rata-rata revenue per pelanggan belum ada; definisi tidak tertulis.
 - **Perbaikan:** `COUNT(*)` menggantikan `COUNT(kolom)`; ditambah `total_orders` dan `avg_revenue_per_customer_usd`; catatan definisi di header.
 - **Bukti:** jumlah order 25.266; revenue 15.012.982,48; populasi 10.844 pelanggan.
 - **Temuan:** Repeat + Loyal = 69,05% pelanggan dan 86,74% revenue. Nilai per order hampir sama di semua tingkat (±593 sampai 595 USD).
@@ -85,23 +86,31 @@ Distribusi status: COMPLETE 22.899; PENDING_PAYMENT 15.030; PROCESSING 8.275; PE
 
 | ID | Temuan | Bukti | Dampak | Status |
 |---|---|---|---|---|
-| DQ-1 | 5.189 order valid (17,0% dari 30.455) tidak punya item di `order_items`, tersebar di semua status | 30.455 order valid vs 25.266 order valid yang punya item | Revenue tidak terpengaruh. Jumlah order, AOV (±594 vs ±493 USD), dan segmentasi pelanggan terpengaruh | Terverifikasi; penyebab tidak dapat ditentukan dari database |
+| DQ-1 | 5.189 order valid (17,0% dari 30.455) tidak punya item di `order_items`. Di seluruh data, 11.452 dari 68.883 order (16,63%) tanpa item, tersebar merata di semua status. | 30.455 order valid vs 25.266 order valid yang punya item | Revenue tidak terpengaruh. Jumlah order, AOV (±594 vs ±493 USD), dan segmentasi pelanggan terpengaruh | Terverifikasi; penyebab tidak dapat ditentukan dari database |
 | DQ-2 | Dari 12.435 pelanggan, 11.405 punya order valid dan 10.844 punya order valid dengan item | Query pembanding dan hasil Q09 | 1.030 pelanggan tanpa order valid; 561 lagi hilang karena DQ-1 | Terverifikasi |
 | DQ-3 | Tidak ada order pada 2014-03-09 | Query pada rentang 2014-03-08 s.d. 2014-03-10 | Celah satu hari di data harian | Terverifikasi; penyebab tidak diketahui |
 | DQ-4 | Bulan pertama (2013-07, 7 hari) dan terakhir (2014-07, 24 hari) parsial | `MIN`/`MAX` tanggal dan `active_days` | Tidak dapat dibandingkan langsung dengan bulan penuh | Terverifikasi; ditangani di Q08 |
 | DQ-5 | Nama kembar: dua kategori "Electronics", dua pelanggan "Mary Smith" | ID berbeda (kategori 13 dan 37; pelanggan 9337 dan 4116) | Pengelompokan per nama menggabungkan entitas berbeda | Terverifikasi; ditangani dengan `GROUP BY` ID |
 | DQ-6 | Revenue lima kategori identik sampai sen dengan revenue satu produk (Fishing = produk 1004; Camping & Hiking = 957; Women's Apparel = 502; Indoor/Outdoor Games = 1014; Men's Footwear = 403) | Perbandingan hasil Q01 dan Q02 | Konsentrasi revenue ada di level produk | Terverifikasi dari angka; pemetaan produk-kategori belum diperiksa langsung |
 | DQ-7 | Tidak ada kolom mata uang | Format harga (dua desimal, banyak akhiran .99) | Satuan diasumsikan USD | Asumsi; tidak ada konversi |
+| DQ-8 | Order tanpa item tidak terkait status maupun bulan: orphan rate 15,93% s.d. 17,18% antar status dan 15,58% s.d. 17,19% antar bulan (keseluruhan 16,63%) | Notebook Kasus 1 (`orphan_by_status`, `orphan_by_month`); orphan `COMPLETE` + `CLOSED` = 3.934 + 1.255 = 5.189, cocok dengan SQL; jumlah orphan sama lewat `merge` dan `isin()` (11.452); item tanpa order induk = 0, jadi kekosongan hanya terjadi pada satu arah | Ketiadaan item tidak dapat dijelaskan oleh variabel apa pun di database. Hitungan order, AOV, dan segmentasi pelanggan hanya mencakup 57.431 order yang punya item | Terverifikasi; penyebab tidak dapat ditentukan dari database |
+| DQ-9 | Dalam variabel yang diuji (nilai order, bulan, pelanggan), status order tidak menunjukkan keterkaitan | Notebook Kasus 2: median nilai order 529,97 s.d. 579,95 antar status; proporsi status per bulan stabil (selisih maksimum ±1,5 poin persentase); order 2013-07 masih 23,03% `PENDING_PAYMENT`; pelanggan dengan order fraud sesuai perkiraan acak | Tidak ada variabel di database yang menjelaskan 56% order tidak selesai atau tanda fraud | Terverifikasi (pola); dugaan bahwa data bersifat latihan belum dikonfirmasi |
 
 
 ## 3. Validasi silang
 
 | Angka | Nilai | Sumber yang cocok |
 |---|---|---|
-| Total valid revenue | 15.012.982,48 USD | Q01, Q05, Q06, Q07, Q08, Q09, total langsung, dan pandas (Hari 3) |
+| Total valid revenue | 15.012.982,48 USD | Q01, Q05, Q06, Q07, Q08, Q09, total langsung, dan pandas (Hari 3, Kasus 2 dan 3) |
 | Order valid | 30.455 | Hitungan langsung dari `orders` dan pandas |
-| Order valid yang punya item | 25.266 | Jumlah `total_orders` Q08, Q09, dan pandas |
+| Order valid yang punya item | 25.266 | Jumlah `total_orders` Q08, Q09, dan pandas (Kasus 3) |
 | Total order | 68.883 | Q04 dan pandas |
+| Order tanpa item | 11.452 (16,63%) | Jumlah orphan per status dan per bulan (Kasus 1); selisih `total_orders` − `orders_with_items` (Kasus 2) |
+| Order dengan item | 57.431 | `orders_with_items` per status (Kasus 2); sama dengan 68.883 − 11.452 |
+| Baris hasil left merge `orders` × `order_items` | 183.650 | 172.198 item + 11.452 order tanpa item (Kasus 1) |
+| Item tanpa order induk | 0 | Pemeriksaan arah sebaliknya dengan `isin()` (Kasus 1) |
+| Total nilai order semua status | 34.322.619,93 USD | Jumlah `total_revenue` per status (Kasus 2) dan total `order_item_subtotal` di `order_items` (identik); bagian `COMPLETE` + `CLOSED` = 15.012.982,48, sama dengan Q01 s.d. Q09 |
+| Rata-rata nilai order valid (AOV) | 594,20 USD | Kasus 3 dan 15.012.982,48 ÷ 25.266 |
 | Kategori dengan penjualan valid | 33 | Q01 dan Q07 |
 
 **Koreksi proses:** angka acuan awal untuk jumlah order Q08 dan Q09 adalah 30.455,
@@ -113,21 +122,71 @@ dengan query yang divalidasi.
 ## 4. Validasi pipeline Python
 
 - Koneksi PostgreSQL ke pandas memakai SQLAlchemy dengan kredensial dari `.env`.
-- Enam tabel termuat dengan jumlah baris sesuai `COUNT(*)` di PostgreSQL.
+- Enam tabel termuat dengan jumlah baris sesuai `COUNT(*)` di PostgreSQL (orders 68.883; order_items 172.198; products 1.345; categories 58; departments 6; customers 12.435).
+- `order_date` terbaca sebagai `datetime64`, sehingga tidak perlu konversi tanggal.
 - Reproduksi di pandas (`merge` inner): 30.455 order valid; 25.266 order valid yang punya item; 15.012.982,48 USD. Semuanya sama dengan hasil SQL.
+- Agregasi `order_items` menjadi satu baris per order dilakukan **sebelum** `merge` ke `orders` (mencegah fan-out), dengan `validate="one_to_one"`. Hasilnya 68.883 baris, dan jumlah order tanpa nilai (NaN) = 11.452, sama dengan jumlah orphan di Kasus 1.
+- Left merge `orders` × `order_items` menghasilkan 183.650 baris = 172.198 item + 11.452 order tanpa item. Artinya setiap item cocok dengan tepat satu order, dan setiap orphan muncul tepat satu kali.
+- Orphan dihitung dengan dua cara, yaitu `merge` (kolom `order_item_id` kosong) dan `isin()`. Hasilnya sama: 11.452.
+- Integritas relasi arah sebaliknya: item tanpa order induk = 0.
+- Total nilai order semua status di pandas (34.322.619,93 USD) sama dengan total `order_item_subtotal` di `order_items` (34.322.619,93 USD).
 
 
-## 5. Keterbatasan dan tindak lanjut
+## 5. Investigasi Python
+
+Notebook: `notebooks/01_eda_and_mart_prep.ipynb`. Semua angka berasal dari sel kode di notebook.
+
+### 5.1 Hipotesis yang diuji
+
+| Hipotesis | Dianggap salah jika | Hasil | Status |
+|---|---|---|---|
+| H1: order `SUSPECTED_FRAUD` bernilai lebih besar daripada order valid | Median dan p95 fraud tidak lebih tinggi | Median fraud 549,95 vs 559,94 (`COMPLETE`) dan 559,93 (`CLOSED`); p95 sama (±1.200); maksimum fraud 1.979,83 lebih kecil dari `COMPLETE` (3.449,91) | **Tidak didukung** |
+| H2: order belum selesai menumpuk di bulan tertentu, terutama bulan terbaru | Proporsi status sama tiap bulan; bulan lama tetap punya porsi pending yang sama | Proporsi stabil; 2013-07 masih 23,03% `PENDING_PAYMENT` (rata-rata 21,82%); selisih terbesar dari rata-rata keseluruhan ±1,5 poin persentase dan tidak searah | **Tidak didukung** |
+| H3: fraud mengelompok pada pelanggan tertentu | Jumlah pelanggan berulang fraud jauh di atas perkiraan acak | Aktual 1.470 / 83 / 4 pelanggan (≥1 / ≥2 / ≥3 order fraud) vs perkiraan acak 1.464,3 / 89,8 / 3,7 (model Poisson, λ = 1.558 ÷ 12.435 ≈ 0,125; dihitung di notebook) | **Tidak ada bukti** |
+
+### 5.2 Kasus 1: orphan orders
+- **Bukti:** 11.452 dari 68.883 order (16,63%) tanpa item. Orphan rate per status 15,93% (`ON_HOLD`) s.d. 17,18% (`COMPLETE`); per bulan 15,58% (2014-07) s.d. 17,19% (2014-03).
+- **Validasi:** orphan `COMPLETE` + `CLOSED` = 5.189 (sama dengan SQL); order dengan item 57.431 = 68.883 − 11.452; baris hasil merge 183.650 = 172.198 + 11.452; orphan lewat `isin()` = lewat `merge` = 11.452; item tanpa order induk = 0.
+- **Dampak:** lihat DQ-1 dan DQ-8.
+
+### 5.3 Kasus 2: nilai order per status
+
+| Kelompok | Nilai order (USD) | Porsi |
+|---|---|---|
+| Valid (`COMPLETE` + `CLOSED`) | 15.012.982,48 | 43,7% |
+| Berjalan (`PENDING_PAYMENT`, `PROCESSING`, `PENDING`, `ON_HOLD`, `PAYMENT_REVIEW`) | 17.846.761,78 | 52,0% |
+| Batal atau diduga fraud (`CANCELED`, `SUSPECTED_FRAUD`) | 1.462.875,67 | 4,3% |
+| **Total semua status** | **34.322.619,93** | 100% |
+
+- Nilai order adalah nilai nominal, bukan revenue terealisasi. Order tanpa item tidak ikut dihitung.
+- Mean nilai order antar status 582,94 s.d. 607,34; median 529,97 s.d. 579,95; p95 1.179,91 s.d. 1.209,86. Tidak ada status yang menonjol.
+- `PENDING_PAYMENT` saja bernilai 7.581.671,05 USD (±50% dari valid revenue).
+- Jumlah order per bulan penuh 5.308 s.d. 6.381; 2013-07 (7 hari) 1.533 order dan 2014-07 (24 hari) 4.468 order.
+
+### 5.4 Kasus 3: distribusi nilai order valid
+- Populasi 25.266 order (valid dan punya item); mean 594,20; median 559,94; simpangan baku 344,48; persentil 25 / 75 / 95 = 299,99 / 829,96 / 1.199,92; minimum 9,99; maksimum 3.449,91.
+- Skewness 0,53 (miring ke kanan moderat). 58 order (0,23%) melewati batas outlier IQR (1.624,91). Sepuluh persen order terbesar menyumbang 20,97% revenue.
+- **Validasi:** jumlah order, total revenue, dan mean cocok dengan SQL; tidak ada order bernilai ≤ 0.
+
+### 5.5 Catatan metode
+- Perbandingan orphan memakai **rate di dalam tiap kelompok**, bukan hitungan mentah, karena status yang besar otomatis punya orphan lebih banyak.
+- Selisih antar bulan dan status dibaca terhadap kisaran fluktuasi acak untuk ukuran kelompoknya. Perkiraan kasar: ±1 poin persentase untuk status besar pada satu bulan penuh.
+- Hipotesis yang tidak didukung tetap dicatat; itu hasil sah, bukan kegagalan.
+
+
+## 6. Keterbatasan dan tindak lanjut
 
 - Pisahkan 25 kategori tanpa penjualan valid: tanpa produk sama sekali vs berproduk tetapi tidak laku.
 - Periksa pemetaan produk ke kategori untuk 9 produk teratas (nama produk tampak tidak selalu sesuai namanya kategori).
 - Periksa apakah nama produk terpotong 45 karakter di sumber data.
-- Hitung revenue per status untuk melihat potensi revenue yang tertahan.
+- [x] Hitung revenue per status untuk melihat potensi revenue yang tertahan (selesai, lihat Bagian 5.3).
 - Analisis retensi kohort sungguhan (Q09 baru segmentasi frekuensi).
+- Minta data riwayat perubahan status order dari sumber data (di luar database ini) untuk menguji penyebab 56% order tidak selesai.
+- Konfirmasi dari sumber data apakah data ini data latihan atau sintetis (dugaan dari pola tanpa keterkaitan pada DQ-9).
 - Data hanya mencakup satu tahun dan satu potret status order, sehingga pola musiman dan perubahan status tidak dapat disimpulkan.
 
 
-## 6. Format entri baru
+## 7. Format entri baru
 
 Setiap temuan baru dicatat dengan: **ID, temuan, bukti (query atau angka), dampak, tindakan, status**
-(Terverifikasi / Dugaan / Terbuka).
+(Terverifikasi / Dugaan / Terbuka). Tuliskan penyebab hanya jika sudah terbukti.
