@@ -179,7 +179,7 @@ Notebook: `notebooks/01_eda_and_mart_prep.ipynb`. Semua angka berasal dari sel k
 - Pisahkan 25 kategori tanpa penjualan valid: tanpa produk sama sekali vs berproduk tetapi tidak laku.
 - Periksa pemetaan produk ke kategori untuk 9 produk teratas (nama produk tampak tidak selalu sesuai namanya kategori).
 - Periksa apakah nama produk terpotong 45 karakter di sumber data.
-- [x] Hitung revenue per status untuk melihat potensi revenue yang tertahan (selesai, lihat Bagian 5.3).
+- Hitung revenue per status untuk melihat potensi revenue yang tertahan (selesai, lihat Bagian 5.3).
 - Analisis retensi kohort sungguhan (Q09 baru segmentasi frekuensi).
 - Minta data riwayat perubahan status order dari sumber data (di luar database ini) untuk menguji penyebab 56% order tidak selesai.
 - Konfirmasi dari sumber data apakah data ini data latihan atau sintetis (dugaan dari pola tanpa keterkaitan pada DQ-9).
@@ -190,3 +190,23 @@ Notebook: `notebooks/01_eda_and_mart_prep.ipynb`. Semua angka berasal dari sel k
 
 Setiap temuan baru dicatat dengan: **ID, temuan, bukti (query atau angka), dampak, tindakan, status**
 (Terverifikasi / Dugaan / Terbuka). Tuliskan penyebab hanya jika sudah terbukti.
+
+
+## 8. Data mart untuk Looker Studio
+
+| Mart | Granularitas | Baris | Populasi |
+|---|---|---|---|
+| `mart_daily_sales` | tanggal × status × kategori | 35.126 | Order yang punya item |
+| `mart_customer_segments` | pelanggan | 10.844 | Pelanggan dengan order valid yang punya item |
+| `mart_daily_orders` | tanggal × status | 3.203 | Semua order |
+
+**Validasi:** tidak ada nilai kosong dan tidak ada duplikat grain; 364 hari unik; total revenue semua status 34.322.619,93 USD; total valid revenue 15.012.982,48 USD (sama dengan Q01, Q05, Q06, Q07, Q08, Q09); total unit 375.758 sama dengan `order_items`; `SUM(unique_orders)` order valid 66.103 vs 25.266 order sebenarnya (menggembung ±2,6 kali); `mart_customer_segments`: 10.844 pelanggan, 25.266 order, 15.012.982,48 USD, tiga tingkat sama dengan Q09 (3.356 / 5.664 / 1.824 pelanggan).
+
+**Keputusan desain:**
+- `GROUP BY` memakai ID. Kolom `category_label` dibuat unik karena dua kategori "Electronics"
+  (ID 13 dan 37) akan menyatu di grafik berdasarkan `category_name`.
+- `unique_orders` tidak aditif lintas kategori: `SUM` order valid = 66.103 vs 25.266 order
+  sebenarnya. Ditangani dengan dokumentasi dan `mart_daily_orders` untuk total order dan AOV.
+- Order tanpa item (11.452) tidak ada di `mart_daily_sales`.
+- Bulan parsial ditandai di `month_status`.
+- Mart pelanggan hanya memuat ID, tanpa data pribadi.
