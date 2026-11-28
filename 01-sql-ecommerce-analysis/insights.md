@@ -22,8 +22,6 @@
 | 3 | Kelola risiko konsentrasi produk dan kategori | 9 produk ≈94,6% revenue; 7 dari 33 kategori = 82,64% | Hari kehabisan stok pada 9 produk utama; porsi revenue 9 produk teratas |
 | 4 | Perbaiki kelengkapan data order | 11.452 order (16,63%) tanpa item; penyebab tidak dapat ditentukan dari database | % order tanpa item (16,63% saat ini); tersedianya riwayat status order |
 
-Aksi 1 dan 2 adalah hipotesis yang perlu diuji, karena database tidak memuat riwayat status dan penyebabnya belum terbukti. Aksi 1 dimulai dengan audit (umur dan nilai tiap order), bukan langsung dengan kampanye.
-
 
 ## 1. Revenue per Category
 **Query:** `01_revenue_per_category.sql` (dikelompokkan per `category_id`)

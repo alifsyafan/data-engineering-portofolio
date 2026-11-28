@@ -175,7 +175,7 @@ Notebook: `notebooks/01_eda_and_mart_prep.ipynb`. Semua angka berasal dari sel k
 ### 5.5 Catatan metode
 - Perbandingan orphan memakai **rate di dalam tiap kelompok**, bukan hitungan mentah, karena status yang besar otomatis punya orphan lebih banyak.
 - Selisih antar bulan dan status dibaca terhadap kisaran fluktuasi acak untuk ukuran kelompoknya. Perkiraan kasar: ±1 poin persentase untuk status besar pada satu bulan penuh.
-- Hipotesis yang tidak didukung tetap dicatat; itu hasil sah, bukan kegagalan.
+- Hipotesis yang tidak didukung tetap dicatat.
 
 
 ## 6. Keterbatasan dan tindak lanjut

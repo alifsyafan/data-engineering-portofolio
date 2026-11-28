@@ -15,11 +15,11 @@ Tim bisnis ingin menjawab empat pertanyaan:
 3. Pelanggan seperti apa yang paling bernilai?
 4. Seberapa dapat dipercaya angka-angka itu?
 
-**Definisi kunci:** *valid revenue* = jumlah `order_item_subtotal` dari order berstatus `COMPLETE` atau `CLOSED`. Seluruh nilai uang dalam **USD** (tidak ada kolom mata uang; satuan disimpulkan dari format harga dan tidak dikonversi).
+**Definisi kunci:** valid revenue = jumlah `order_item_subtotal` dari order berstatus `COMPLETE` atau `CLOSED`. Seluruh nilai uang dalam **USD**.
 
 ## Data
 
-Sumber dataset: [isi nama atau tautan sumber dataset]
+Sumber dataset: Materi pelatihan praktik Data Engineering di Udemy
 
 | Tabel | Deskripsi | Jumlah Baris |
 |---|---|---|
@@ -48,9 +48,9 @@ Google Sheets → Looker Studio
 
 | Tahap | Apa yang dikerjakan | Hasil utama |
 |---|---|---|
-| 1. Audit query SQL | Memeriksa filter, pengelompokan, JOIN, dan urutan hasil pada 6 query lama; menambah 3 query lanjutan (Pareto, pertumbuhan MoM, segmentasi pelanggan) | Menemukan pengelompokan per nama yang menyatukan entitas berbeda dan JOIN yang menyaring order tanpa item |
-| 2. Investigasi di Python | Audit order tanpa item; uji hipotesis tentang `SUSPECTED_FRAUD` dan order tertunda; distribusi nilai order | Tiga hipotesis tidak didukung data; 11.452 order tanpa item tersebar merata |
-| 3. Data mart | Tiga tabel agregasi dengan granularitas jelas dan kamus data | Bebas penghitungan ganda saat difilter; total cocok sampai sen |
+| 1. Audit query SQL | Memeriksa filter, pengelompokan, JOIN, dan urutan hasil pada 6 query pertama. Menambah 3 query lanjutan (Pareto, pertumbuhan MoM, segmentasi pelanggan) | Menemukan pengelompokan per nama yang menyatukan entitas berbeda dan JOIN yang menyaring order tanpa item |
+| 2. Investigasi di Python | Audit order tanpa item, uji hipotesis `SUSPECTED_FRAUD` dan order tertunda. Distribusi nilai order | Tiga hipotesis tidak didukung data, 11.452 order tanpa item tersebar merata |
+| 3. Data mart | Tiga tabel agregasi dengan granularitas jelas dan kamus data | Bebas penghitungan ganda saat difilter, total cocok sampai sen |
 | 4. Dashboard | Dua halaman, empat KPI, grafik tren, kategori, departemen, status, segmen pelanggan | Seluruh angka dashboard cocok dengan SQL dan Python |
 
 ## Temuan utama
@@ -58,7 +58,7 @@ Google Sheets → Looker Studio
 | Pertanyaan | Temuan |
 |---|---|
 | Total valid revenue | **15.012.982,48 USD** dari 25.266 order valid yang punya item. Rata-rata nilai order (AOV) 594,20 USD, median 559,94 USD |
-| Dari mana revenue datang | **7 dari 33 kategori (21%) menghasilkan 82,64%** revenue; Fishing sendirian 20,13%. Sembilan produk ≈ 94,6%. Satu departemen (Fan Shop) 49,62% |
+| Dari mana revenue datang | **7 dari 33 kategori (21%) menghasilkan 82,64%** revenue, Fishing sendirian 20,13%. Sembilan produk ≈ 94,6%. Satu departemen (Fan Shop) 49,62% |
 | Bagaimana tren | Revenue bulanan datar di kisaran **1,17 s.d. 1,38 juta USD** (11 bulan penuh), puncak November 2013. AOV stabil, jadi naik-turunnya ditentukan jumlah order |
 | Berapa order yang menjadi revenue | Hanya **44,2%** order (30.455 dari 68.883) berstatus valid. Sebanyak 51,5% masih berjalan (nilai nominal ±17,85 juta USD, lebih besar dari valid revenue) dan 4,3% batal atau diduga fraud |
 | Pelanggan bernilai | Pelanggan Repeat dan Loyal = **69,05% pelanggan tetapi 86,74% revenue**. Nilai per order sama di semua tingkat (±593 s.d. 595 USD), jadi perbedaannya ada pada **frekuensi belanja** |
@@ -98,17 +98,17 @@ Dashboard membaca tiga data mart, bukan tabel mentah. Alasannya: kecepatan, tida
 ## Struktur repositori
 
 ```
-sql-ecommerce-analysis/
-├── queries/                  # 9 query SQL (01 s.d. 09)
+01-sql-ecommerce-analysis/
+├── queries/                  
 ├── notebooks/
 │   └── 01_eda_and_mart_prep.ipynb
 ├── data/
-│   └── processed/            # 3 data mart (CSV) + kamus data (README.md)
-├── docs/                     # PDF dashboard dan panduan Looker Studio
-├── insights.md               # Insight dan rekomendasi bisnis
-├── audit_log.md              # Audit, validasi silang, dan temuan kualitas data
+│   └── processed/            
+├── docs/                     
+├── insights.md               
+├── audit_log.md              
 ├── requirements.txt
-├── .env.example              # Template kredensial (file .env tidak di-commit)
+├── .env.example
 └── README.md
 ```
 
@@ -138,4 +138,4 @@ sql-ecommerce-analysis/
 
 ## Tools
 
-PostgreSQL 16 · pgAdmin 4 · Python (pandas, SQLAlchemy, psycopg2, seaborn) · Jupyter · Google Sheets · Looker Studio · VS Code · Git
+PostgreSQL 18 · pgAdmin 4 · Python (pandas, SQLAlchemy, psycopg2, seaborn) · Jupyter · Google Sheets · Looker Studio · Antigravity IDE · Git
