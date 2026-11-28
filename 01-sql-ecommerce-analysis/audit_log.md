@@ -112,6 +112,8 @@ Distribusi status: COMPLETE 22.899; PENDING_PAYMENT 15.030; PROCESSING 8.275; PE
 | Total nilai order semua status | 34.322.619,93 USD | Jumlah `total_revenue` per status (Kasus 2) dan total `order_item_subtotal` di `order_items` (identik); bagian `COMPLETE` + `CLOSED` = 15.012.982,48, sama dengan Q01 s.d. Q09 |
 | Rata-rata nilai order valid (AOV) | 594,20 USD | Kasus 3 dan 15.012.982,48 ÷ 25.266 |
 | Kategori dengan penjualan valid | 33 | Q01 dan Q07 |
+| KPI dashboard Halaman 1 | 15.012.982,48 USD; 25.266 order; AOV 594,20; Valid Order Share 43,99% | Query SQL langsung (revenue, order, AOV), Python (Kasus 3), dan `mart_daily_orders.csv` |
+| Status order di dashboard Halaman 2 | 68.883 order; nilai order 34.322.619,93 USD | Query 04, Kasus 2, dan `mart_daily_orders.csv` |
 
 **Koreksi proses:** angka acuan awal untuk jumlah order Q08 dan Q09 adalah 30.455,
 tetapi `JOIN` ke `order_items` menyaring order tanpa item sehingga yang benar adalah 25.266.
@@ -142,7 +144,9 @@ Notebook: `notebooks/01_eda_and_mart_prep.ipynb`. Semua angka berasal dari sel k
 |---|---|---|---|
 | H1: order `SUSPECTED_FRAUD` bernilai lebih besar daripada order valid | Median dan p95 fraud tidak lebih tinggi | Median fraud 549,95 vs 559,94 (`COMPLETE`) dan 559,93 (`CLOSED`); p95 sama (±1.200); maksimum fraud 1.979,83 lebih kecil dari `COMPLETE` (3.449,91) | **Tidak didukung** |
 | H2: order belum selesai menumpuk di bulan tertentu, terutama bulan terbaru | Proporsi status sama tiap bulan; bulan lama tetap punya porsi pending yang sama | Proporsi stabil; 2013-07 masih 23,03% `PENDING_PAYMENT` (rata-rata 21,82%); selisih terbesar dari rata-rata keseluruhan ±1,5 poin persentase dan tidak searah | **Tidak didukung** |
-| H3: fraud mengelompok pada pelanggan tertentu | Jumlah pelanggan berulang fraud jauh di atas perkiraan acak | Aktual 1.470 / 83 / 4 pelanggan (≥1 / ≥2 / ≥3 order fraud) vs perkiraan acak 1.464,3 / 89,8 / 3,7 (model Poisson, λ = 1.558 ÷ 12.435 ≈ 0,125; dihitung di notebook) | **Tidak ada bukti** |
+| H3: fraud mengelompok pada pelanggan tertentu | Jumlah pelanggan berulang fraud jauh di atas perkiraan acak | Aktual 1.470 / 83 / 4 pelanggan (≥1 / ≥2 / ≥3 order fraud) vs perkiraan acak 1.464,4 / 89,8 / 3,7 (model binomial memakai jumlah order tiap pelanggan; dihitung di notebook) | **Tidak ada bukti** |
+| H4: order `PENDING` mengelompok pada pelanggan tertentu | Jumlah pelanggan berulang pending jauh di atas perkiraan acak | Aktual 5.681 / 1.554 / 310 / 58 / 6 pelanggan (≥1 sampai ≥5 order pending) vs perkiraan acak 5.692,5 / 1.564,3 / 302,4 / 44,8 / 5,4. Hanya ≥4 yang agak di atas (58 vs 44,8, ±2 simpangan baku), wajar terjadi kebetulan dari delapan perbandingan | **Tidak ada bukti** |
+| H5: status `PENDING` atau `SUSPECTED_FRAUD` terkait hari dalam minggu | Proporsi per hari jauh dari proporsi keseluruhan | `PENDING` 10,70% s.d. 11,37% (keseluruhan 11,05%); `SUSPECTED_FRAUD` 2,13% s.d. 2,40% (keseluruhan 2,26%), di dalam kisaran fluktuasi acak | **Tidak ada bukti** |
 
 ### 5.2 Kasus 1: orphan orders
 - **Bukti:** 11.452 dari 68.883 order (16,63%) tanpa item. Orphan rate per status 15,93% (`ON_HOLD`) s.d. 17,18% (`COMPLETE`); per bulan 15,58% (2014-07) s.d. 17,19% (2014-03).
@@ -183,6 +187,7 @@ Notebook: `notebooks/01_eda_and_mart_prep.ipynb`. Semua angka berasal dari sel k
 - Analisis retensi kohort sungguhan (Q09 baru segmentasi frekuensi).
 - Minta data riwayat perubahan status order dari sumber data (di luar database ini) untuk menguji penyebab 56% order tidak selesai.
 - Konfirmasi dari sumber data apakah data ini data latihan atau sintetis (dugaan dari pola tanpa keterkaitan pada DQ-9).
+- Buat data mart tingkat produk jika dashboard perlu menampilkan top produk (dashboard saat ini tidak punya rincian per produk).
 - Data hanya mencakup satu tahun dan satu potret status order, sehingga pola musiman dan perubahan status tidak dapat disimpulkan.
 
 
@@ -202,11 +207,49 @@ Setiap temuan baru dicatat dengan: **ID, temuan, bukti (query atau angka), dampa
 
 **Validasi:** tidak ada nilai kosong dan tidak ada duplikat grain; 364 hari unik; total revenue semua status 34.322.619,93 USD; total valid revenue 15.012.982,48 USD (sama dengan Q01, Q05, Q06, Q07, Q08, Q09); total unit 375.758 sama dengan `order_items`; `SUM(unique_orders)` order valid 66.103 vs 25.266 order sebenarnya (menggembung ±2,6 kali); `mart_customer_segments`: 10.844 pelanggan, 25.266 order, 15.012.982,48 USD, tiga tingkat sama dengan Q09 (3.356 / 5.664 / 1.824 pelanggan).
 
+**Validasi file CSV (dibaca ulang dari `data/processed/`):** `mart_daily_sales.csv` 35.126 baris × 12 kolom (3,37 MB): total revenue 34.322.619,93 dan valid revenue 15.012.982,48, bulan `PARTIAL` hanya 2013-07 dan 2014-07; `mart_customer_segments.csv` 10.844 baris × 6 kolom (0,65 MB): total 15.012.982,48; `mart_daily_orders.csv` 3.203 baris × 9 kolom (0,20 MB): 68.883 total order, 57.431 order dengan item, 25.266 order valid dengan item, valid revenue 15.012.982,48, AOV 594,20. Setelah dibaca ulang, `order_date` terbaca sebagai teks dan `category_id` sebagai angka, sehingga tipenya diatur ulang di Looker Studio.
+
 **Keputusan desain:**
 - `GROUP BY` memakai ID. Kolom `category_label` dibuat unik karena dua kategori "Electronics"
   (ID 13 dan 37) akan menyatu di grafik berdasarkan `category_name`.
-- `unique_orders` tidak aditif lintas kategori: `SUM` order valid = 66.103 vs 25.266 order
-  sebenarnya. Ditangani dengan dokumentasi dan `mart_daily_orders` untuk total order dan AOV.
+- `unique_orders` tidak aditif lintas kategori: `SUM` order valid = 66.103 vs 25.266 order sebenarnya. Ditangani dengan dokumentasi dan `mart_daily_orders` untuk total order dan AOV.
 - Order tanpa item (11.452) tidak ada di `mart_daily_sales`.
 - Bulan parsial ditandai di `month_status`.
 - Mart pelanggan hanya memuat ID, tanpa data pribadi.
+
+
+## 9. Dashboard Looker Studio
+
+**Sumber data:** Google Sheets `Ecommerce_BI_Data_Marts` (3 tab dari 3 CSV mart), locale United States.
+
+**Koreksi terhadap instruksi awal:**
+- Metric order memakai `orders_with_items`. `total_orders` akan memberi 30.455 order valid dan AOV 492,96 karena ikut menghitung order tanpa item.
+- Dimension kategori memakai `category_label` karena `category_name` menyatukan dua "Electronics" (bar ke-10 menjadi 161.156,40, bukan 112.141,70).
+- Rentang tanggal default diset Custom (2013-07-25 s.d. 2014-07-24).
+- Filter valid memakai `status_group = "1. Valid"` dan dibuat per sumber data.
+
+**Validasi dashboard:** Valid Revenue 15.012.982,48; Valid Orders 25.266; AOV 594,20; Valid Order Share 43,99% (25.266 ÷ 57.431 order yang punya item); tren 2013-07 333.465,45, 2013-08 1.221.828,90, 2013-11 1.379.935,33, 2014-07 955.590,77 (sama dengan Query 06); bar chart #1 Fishing 3.022.248,88 dan #9 Shop By Sport 568.171,81; nilai "Others" 779.715,23 = 15.012.982,48 − 14.233.267,25 (jumlah 9 kategori teratas); setelah opsi Others dimatikan bar ke-10 = Electronics 112.141,70; tabel departemen: persentase Fan Shop 49,62% / Apparel 21,40% / Golf 13,44% / Footwear 11,87% / Outdoors 2,88% / Fitness 0,78% (berjumlah 99,99%, selisih pembulatan), jumlah revenue semua departemen = 15.012.982,48.
+
+**Keterbatasan:** dropdown departemen tidak memengaruhi scorecard (sumber data berbeda); Valid Order Share (43,99%) dihitung dari 57.431 order yang punya item, bukan dari seluruh 68.883 order (44,21%).
+
+**Halaman 2 (Order Status & Customer Retention):**
+- Distribusi status memakai `total_orders` (68.883 order, sama dengan Query 04), bukan `orders_with_items`; `unique_orders` tidak ada di `mart_daily_orders`.
+- Kolom pelanggan memakai `customer_id` (diganti dari `order_customer_id` di mart).
+- Kontrol tanggal dijadikan report-level. Grafik `mart_customer_segments` memakai rentang tetap (Custom 2013-07-25 s.d. 2014-07-24), karena data tingkat pelanggan memuat total seumur hidup yang tidak bisa dipotong per tanggal.
+- Kolom `revenue_usd` per status diberi nama "Nilai order (USD)" karena nilai nominal, bukan revenue terealisasi.
+- Porsi valid di Halaman 1 (43,99%, dari 57.431 order ber-item) berbeda dari Halaman 2 (44,21%, dari 68.883 order); keduanya konsisten dan dicatat di halaman.
+- Insight "56% order tertahan" dirinci menjadi 51,5% berjalan (nominal ±17,85 juta USD) dan 4,3% batal/fraud.
+
+**Validasi Halaman 2:** tabel status cocok dengan Query 04 dan Kasus 2 (22.899 / 15.030 / 8.275 / 7.610 / 7.556 / 3.798 / 1.558 / 1.428 / 729; total 68.883; nilai order total 34.322.619,93 USD). Segmen pelanggan cocok dengan Query 09: 3.356 / 5.664 / 1.824 pelanggan; 3.356 / 13.645 / 8.265 order; revenue 1.990.936,12 / 8.103.491,64 / 4.918.554,72; Revenue per Customer 593,25 / 1.430,70 / 2.696,58; Revenue per Order 593,25 / 593,88 / 595,11. Grafik pelanggan tidak berubah saat kontrol tanggal dipersempit (rentang tetap berhasil).
+
+**Validasi KPI terhadap SQL dan Python:** empat KPI Halaman 1 cocok: Valid Revenue 15.012.982,48 USD, Valid Orders 25.266, AOV 594,20 (query SQL langsung dan Python), dan Valid Order Share 43,99% (25.266 ÷ 57.431; pembilang dan penyebut dari `mart_daily_orders.csv` dan Python).
+
+**Kendala teknis yang ditemui dan penanganannya:**
+- Bar chart dengan batas 10 bar menampilkan "Others" (779.715,23 = gabungan 24 kategori terkecil). Opsi Show Others dimatikan agar sesuai dengan judul Top 10.
+- Nama kategori ganda ("Electronics") disatukan oleh Looker Studio bila memakai `category_name`; dimension memakai `category_label`.
+- Pembulatan: Looker Studio menghilangkan nol di belakang (`$1,221,828.9`), dan persentase departemen berjumlah 99,99%. Bukan kesalahan data; nilai tepat diverifikasi lewat penjumlahan.
+- Filter bersifat per sumber data: dropdown departemen tidak memengaruhi scorecard dari `mart_daily_orders`. Disengaja untuk menghindari penghitungan ganda, dan dicatat di dashboard.
+
+**Hasil uji Halaman 2:** grafik dan tabel pelanggan tidak berubah saat kontrol tanggal dipersempit.
+
+**Bukti visual:** `docs/dashboard.pdf`. Tautan dashboard ada di `README.md`.

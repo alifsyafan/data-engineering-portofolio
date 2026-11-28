@@ -5,12 +5,24 @@
 - **Definisi:** valid revenue = revenue dari order berstatus `COMPLETE` dan `CLOSED`, dalam **USD** (tidak ada kolom mata uang; satuan disimpulkan dari format harga, tanpa konversi).
 - **Cakupan data:** 68.883 order, 2013-07-25 s.d. 2014-07-24 (365 hari, tidak ada order pada 2014-03-09). Bulan pertama (2013-07) dan terakhir (2014-07) parsial.
 - **Total valid revenue: 15.012.982,48 USD**, konsisten di Query 01, 05, 06, 07, 08, dan 09 serta di perhitungan pandas.
-- **Revenue sangat terkonsentrasi:** 7 dari 33 kategori menghasilkan 82,64% revenue, dan 9 produk menghasilkan ±94,6%.
+- **Revenue sangat terkonsentrasi:** 7 dari 33 kategori menghasilkan 82,64% revenue, 9 produk menghasilkan ±94,6%, dan satu departemen (Fan Shop) menyumbang 49,62%.
 - **Revenue bulanan relatif datar** (1,17 s.d. 1,38 juta USD per bulan penuh). Naik-turunnya lebih dipengaruhi jumlah order daripada nilai per order.
 - **Pelanggan berulang (2x ke atas) = 69% pelanggan tetapi ±87% revenue.**
 - **Status order tidak menunjukkan keterkaitan dengan nilai order, bulan, maupun pelanggan.** Hipotesis bahwa order fraud bernilai lebih besar dan bahwa order belum selesai menumpuk di bulan tertentu tidak didukung data.
 - **Nilai order yang masih berjalan (17,85 juta USD, 52,0%) lebih besar daripada valid revenue (15,01 juta USD, 43,7%).** Ini nilai nominal, belum tentu terealisasi.
 - **Kualitas data:** 11.452 dari 68.883 order (16,63%) tidak punya item, tersebar merata antar status dan bulan. Sebanyak 5.189 di antaranya order valid (±17% dari 30.455), sehingga hitungan order, AOV, dan segmentasi pelanggan memakai definisi "order valid yang punya item".
+
+
+## Rekomendasi Prioritas
+
+| # | Aksi | Dasar data | Metrik keberhasilan |
+|---|---|---|---|
+| 1 | Tuntaskan order `PENDING_PAYMENT` | 15.030 order (21,82%), nominal ±7,58 juta USD (±50% dari valid revenue). Proporsinya sama di semua bulan, termasuk order 2013-07 | Payment Completion Rate; jumlah dan nilai order `PENDING_PAYMENT` yang lebih tua dari 30 hari; Valid Order Share (43,99% saat ini) |
+| 2 | Dorong pelanggan Repeat menjadi Loyal | 5.664 pelanggan Repeat (52,23%); pelanggan Loyal bernilai ±4,5 kali pelanggan sekali beli, dan perbedaannya berasal dari frekuensi, bukan nilai keranjang (±593 s.d. 595 USD per order) | % pelanggan dengan ≥4 order (16,82% saat ini); revenue per pelanggan; tingkat pembelian ulang |
+| 3 | Kelola risiko konsentrasi produk dan kategori | 9 produk ≈94,6% revenue; 7 dari 33 kategori = 82,64% | Hari kehabisan stok pada 9 produk utama; porsi revenue 9 produk teratas |
+| 4 | Perbaiki kelengkapan data order | 11.452 order (16,63%) tanpa item; penyebab tidak dapat ditentukan dari database | % order tanpa item (16,63% saat ini); tersedianya riwayat status order |
+
+Aksi 1 dan 2 adalah hipotesis yang perlu diuji, karena database tidak memuat riwayat status dan penyebabnya belum terbukti. Aksi 1 dimulai dengan audit (umur dan nilai tiap order), bukan langsung dengan kampanye.
 
 
 ## 1. Revenue per Category
@@ -171,7 +183,9 @@
 **Insight:**
 - **H1 (fraud bernilai lebih besar) tidak didukung.** Median nilai order `SUSPECTED_FRAUD` 549,95 USD, sedikit lebih rendah daripada `COMPLETE` (559,94) dan `CLOSED` (559,93); p95 sama (±1.200). Antar sembilan status, median berkisar 529,97 s.d. 579,95.
 - **H2 (order belum selesai menumpuk di bulan tertentu) tidak didukung.** Proporsi status stabil antar bulan (misalnya `PENDING_PAYMENT` 21,11% s.d. 23,03%, `COMPLETE` 31,76% s.d. 34,15%), dengan selisih terbesar dari rata-rata keseluruhan sekitar 1,5 poin persentase dan tidak searah. Order 2013-07 tidak lebih sedikit pending dibanding order terbaru.
-- **Fraud tidak mengelompok pada pelanggan tertentu.** 1.470 pelanggan punya minimal satu order fraud, 83 minimal dua, dan 4 minimal tiga. Jika 1.558 tanda fraud tersebar acak (model Poisson), perkiraannya 1.464,3, 89,8, dan 3,7 pelanggan, sangat dekat dengan hasil aktual.
+- **Fraud tidak mengelompok pada pelanggan tertentu.** 1.470 pelanggan punya minimal satu order fraud, 83 minimal dua, dan 4 minimal tiga. Jika 1.558 tanda fraud tersebar acak ke order (model binomial memakai jumlah order tiap pelanggan), perkiraannya 1.464,4, 89,8, dan 3,7 pelanggan, sangat dekat dengan hasil aktual.
+- **Order `PENDING` juga tidak mengelompok pada pelanggan tertentu.** Pelanggan dengan minimal 1 / 2 / 3 / 4 / 5 order pending: aktual 5.681 / 1.554 / 310 / 58 / 6 vs perkiraan acak 5.692,5 / 1.564,3 / 302,4 / 44,8 / 5,4. Hanya "minimal 4" yang agak di atas perkiraan (sekitar dua simpangan baku), yang dari delapan perbandingan masih wajar terjadi kebetulan.
+- **Tidak ada pola hari dalam minggu.** Proporsi `PENDING` 10,70% s.d. 11,37% (keseluruhan 11,05%) dan `SUSPECTED_FRAUD` 2,13% s.d. 2,40% (keseluruhan 2,26%) antar hari, di dalam kisaran fluktuasi acak.
 - Dalam variabel yang diuji (nilai order, bulan, pelanggan), **status order tidak menunjukkan keterkaitan**.
 
 **Rekomendasi Bisnis:**
@@ -215,3 +229,27 @@
 - **Cakupan:** satu tahun data dan satu potret status order, sehingga pola musiman dan perubahan status tidak dapat disimpulkan.
 - **Integritas relasi:** tidak ada item tanpa order induk. Satu-satunya kekosongan adalah order tanpa item.
 - **Validasi silang:** total valid revenue 15.012.982,48 USD sama di Query 01, 05, 06, 07, 08, dan 09, serta di perhitungan pandas. Total nilai order semua status (34.322.619,93 USD) sama dengan total `order_item_subtotal`, dan hasil left merge berjumlah 183.650 baris (172.198 item + 11.452 order tanpa item).
+
+
+## 12. Dashboard Looker Studio
+
+Dashboard dua halaman yang membaca tiga data mart di `data/processed/`. Tautan dan PDF ada di `README.md`.
+
+- **Halaman 1, Sales & Category Overview:** empat KPI, tren valid revenue bulanan, Top 10 kategori, dan tabel departemen.
+- **Halaman 2, Order Status & Customer Retention:** distribusi status order beserta nilai nominal, segmentasi pelanggan, dan ringkasan insight.
+
+| KPI | Nilai | Definisi |
+|---|---|---|
+| Valid Revenue | 15.012.982,48 USD | Jumlah `order_item_subtotal` order `COMPLETE` dan `CLOSED` |
+| Valid Orders | 25.266 | Order valid yang punya item |
+| Average Order Value | 594,20 USD | Valid Revenue ÷ Valid Orders |
+| Valid Order Share | 43,99% | 25.266 ÷ 57.431 order yang punya item. Query 04 memberi 44,21% karena penyebutnya seluruh 68.883 order |
+
+**Insight tambahan dari dashboard:**
+- **Satu departemen mendominasi.** Kontribusi valid revenue per departemen: Fan Shop 49,62%, Apparel 21,40%, Golf 13,44%, Footwear 11,87%, Outdoors 2,88%, Fitness 0,78% (berjumlah 99,99%, selisih pembulatan).
+- **Pelanggan berulang menyumbang lebih besar dari porsinya.** Tingkat Loyal = 16,82% pelanggan tetapi 32,76% revenue; tingkat One-time = 30,95% pelanggan tetapi 13,26% revenue.
+
+**Cara membaca dengan benar:**
+- Dropdown departemen hanya memengaruhi grafik kategori dan tabel departemen, bukan KPI (sumber data berbeda).
+- Grafik pelanggan memakai rentang tanggal tetap karena datanya satu baris per pelanggan, jadi tidak dapat dipotong per tanggal.
+- Nilai order per status adalah nilai nominal, bukan revenue terealisasi.
