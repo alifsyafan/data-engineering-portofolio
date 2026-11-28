@@ -7,8 +7,7 @@ Kumpulan portfolio data yang saya bangun selama proses belajar.
 | # | Portfolio | Tools | Status |
 |---|---|---|---|
 | 1 | [E-Commerce Sales & Customer Analysis](01-sql-ecommerce-analysis/) | SQL, PostgreSQL, Python (Pandas), Google Sheets, Looker Studio | Selesai |
-| 2 | [Python Data Processing]
-(02-python-data-processing/) | Python, Pandas, PostgreSQL | Selesai |
+| 2 | [Python Data Processing](02-python-data-processing/) | Python, Pandas, PostgreSQL | Selesai |
 
 ## E-Commerce Sales & Customer Analysis
 
